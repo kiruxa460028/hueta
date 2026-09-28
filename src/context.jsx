@@ -34,7 +34,9 @@ export const useBracket = () => useContext(BracketCtx);
 
 // Источник данных: 'loading' → 'live' (OpenDota) | 'demo' (офлайн-генератор)
 export function DataSourceProvider({ children }) {
-  const [mode, setMode] = useState("loading");
+  const [mode, setMode] = useState(() =>
+    live.status === "ok" ? "live" : live.status === "error" ? "demo" : "loading"
+  );
 
   useEffect(() => {
     const apply = () => setMode(live.status === "ok" ? "live" : live.status === "loading" || live.status === "idle" ? "loading" : "demo");

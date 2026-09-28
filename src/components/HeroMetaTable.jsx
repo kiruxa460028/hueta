@@ -4,19 +4,27 @@ import { HeroIcon, WinRateBar, Sparkline } from "./common.jsx";
 import { wrColor, trendClass } from "../lib/format.js";
 import { useBracket } from "../context.jsx";
 
+// Колонки таблицы. opt: true — колонка скрывается, если данных нет
+// (в живом режиме OpenDota нет KDA/GPM по героям)
 const COLS = [
   { key: "hero", label: "Герой", sortable: false },
   { key: "picks", label: "Пики", sortable: true },
-  { key: "bans", label: "Баны", sortable: true },
-  { key: "pickRate", label: "П%", sortable: true },
-  { key: "banRate", label: "Б%", sortable: true },
+  { key: "bans", label: "Баны", sortable: true, opt: true },
+  { key: "pickRate", label: "П%", sortable: true, opt: true },
+  { key: "banRate", label: "Б%", sortable: true, opt: true },
   { key: "wr", label: "Винрейт", sortable: true },
-  { key: "kda", label: "KDA", sortable: true },
-  { key: "gpm", label: "GPM", sortable: true },
-  { key: "delta", label: "Тренд", sortable: true },
+  { key: "kda", label: "KDA", sortable: true, opt: true },
+  { key: "gpm", label: "GPM", sortable: true, opt: true },
+  { key: "delta", label: "Тренд", sortable: true, opt: true },
 ];
 
-const COMPACT_COLS = new Set(["hero", "picks", "wr", "delta"]);
+const COMPACT_COLS = new Set(["hero", "picks", "wr"]);
+
+// Безопасное форматирование: null/undefined → "—"
+const fmtOrDash = (v, digits = 1, suffix = "") =>
+  v == null || Number.isNaN(v) ? "—" : `${v.toFixed(digits)}${suffix}`;
+const fmtInt = (v) => (v == null ? "—" : Math.round(v));
+const sortVal = (r, key) => (r[key] == null ? -Infinity : r[key]);
 
 export default function HeroMetaTable({ data, compact = false, limit, initialSort }) {
   const [sort, setSort] = useState(initialSort || { key: "wr", dir: "desc" });
@@ -26,8 +34,8 @@ export default function HeroMetaTable({ data, compact = false, limit, initialSor
     const arr = [...data];
     arr.sort((a, b) => {
       const dir = sort.dir === "asc" ? 1 : -1;
-      if (sort.key === "hero") return a.hero.n.localeCompare(b.hero.n) * dir;
-      return (a[sort.key] - b[sort.key]) * dir;
+      if (sort.key === "hero") return (a.hero?.n || "").localeCompare(b.hero?.n || "") * dir;
+      return (sortVal(a, sort.key) - sortVal(b, sort.key)) * dir;
     });
     return limit ? arr.slice(0, limit) : arr;
   }, [data, sort, limit]);
@@ -37,9 +45,9 @@ export default function HeroMetaTable({ data, compact = false, limit, initialSor
     else setSort({ key, dir: key === "hero" ? "asc" : "desc" });
   };
 
-  const cols = COLS.filter((c) => (!compact || COMPACT_COLS.has(c.key)) && (!c.opt || data.some((r) => r[c.key] != null)));
-
-  const fmtInt = (v) => (v == null ? "—" : Math.round(v));
+  const cols = COLS.filter(
+    (c) => (!compact || COMPACT_COLS.has(c.key)) && (!c.opt || data.some((r) => r[c.key] != null))
+  );
 
   return (
     <div className="wide-table-wrap">
@@ -51,7 +59,6 @@ export default function HeroMetaTable({ data, compact = false, limit, initialSor
                 key={c.key}
                 className={c.sortable ? "sortable" : ""}
                 onClick={c.sortable ? () => onSort(c.key) : undefined}
-                data-active={sort.key === c.key}
               >
                 {c.label}
                 {sort.key === c.key ? (sort.dir === "desc" ? " ↓" : " ↑") : ""}
@@ -68,25 +75,32 @@ export default function HeroMetaTable({ data, compact = false, limit, initialSor
                     <HeroIcon hero={r.hero} size="md" />
                     <span>
                       <span className="hero-cell__name">{r.hero.n}</span>
-                      <span className="hero-cell__sub">{r.picks} игр · {r.bans} банов</span>
+                      <span className="hero-cell__sub">
+                        {fmtInt(r.picks)} игр{r.bans != null ? ` · ${fmtInt(r.bans)} банов` : ""}
+                      </span>
                     </span>
                   </span>
                 </Link>
               </td>
-              <td className="num">{r.picks}</td>
-              {!compact && <td className="num">{r.bans}</td>}
-              {!compact && <td className="num">{r.pickRate.toFixed(1)}%</td>}
-              {!compact && <td className="num">{r.banRate.toFixed(1)}%</td>}
-              <td className="num" style={{ fontWeight: 700, color: wrColor(r.wr) }}>
-                {r.wr.toFixed(1)}%{!compact && <WinRateBar wr={r.wr} />}
+              <td className="num">{fmtInt(r.picks)}</td>
+              {!compact && <td className="num">{fmtInt(r.bans)}</td>}
+              {!compact && <td className="num">{fmtOrDash(r.pickRate, 1, "%")}</td>}
+              {!compact && <td className="num">{fmtOrDash(r.banRate, 1, "%")}</td>}
+              <td className="num" style={{ fontWeight: 700, color: r.wr == null ? "var(--muted)" : wrColor(r.wr) }}>
+                {r.wr == null ? "—" : `${r.wr.toFixed(1)}%`}
+                {!compact && <WinRateBar wr={r.wr} />}
               </td>
-              {!compact && <td className="num">{r.kda.toFixed(2)}</td>}
-              {!compact && <td className="num">{r.gpm}</td>}
+              {!compact && <td className="num">{fmtOrDash(r.kda, 2)}</td>}
+              {!compact && <td className="num">{fmtInt(r.gpm)}</td>}
               <td className="num">
-                <span className={trendClass(r.delta)}>
-                  {r.delta > 0.05 ? "▲" : r.delta < -0.05 ? "▼" : "•"} {Math.abs(r.delta).toFixed(1)}
-                </span>{" "}
-                <Sparkline values={r.days.slice(-14).map((d) => (d.n ? (d.w / d.n) * 100 : 50))} />
+                {r.delta == null ? (
+                  <span className="muted">—</span>
+                ) : (
+                  <span className={trendClass(r.delta)}>
+                    {r.delta > 0.05 ? "▲" : r.delta < -0.05 ? "▼" : "•"} {Math.abs(r.delta).toFixed(1)}
+                  </span>
+                )}{" "}
+                <Sparkline values={(r.days || []).slice(-14).map((d) => (d.n ? (d.w / d.n) * 100 : 50))} />
               </td>
             </tr>
           ))}

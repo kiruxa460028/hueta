@@ -30,28 +30,46 @@ export function HeroIcon({ hero, size = "md", tooltip }) {
   );
 }
 
-// ---------- Логотип команды (цветные инициалы) ----------
+// ---------- Логотип команды ----------
+// Реальный логотип (если есть), иначе цветные инициалы.
+// Устойчив к отсутствию tag/name (реальные матчи OpenDota дают только name).
 export function TeamLogo({ team, size = 32, tooltip }) {
   if (!team) return null;
+  const name = team.name || team.tag || "?";
+  const label = (team.tag || name).slice(0, 4).toUpperCase();
   const style = {
     width: size,
     height: size,
-    background: `linear-gradient(135deg, ${strColor(team.name)}, ${strColor(team.tag + team.name)})`,
+    background: `linear-gradient(135deg, ${strColor(name)}, ${strColor((team.tag || "") + name)})`,
     fontSize: Math.max(8, Math.round(size * 0.34)),
     borderRadius: Math.round(size * 0.22),
   };
   return (
     <span className="team-logo" style={style} data-tip={tooltip}>
-      {team.tag.slice(0, 4).toUpperCase()}
+      {team.logoUrl ? <TeamLogoImg url={team.logoUrl} label={label} /> : label}
     </span>
+  );
+}
+
+function TeamLogoImg({ url, label }) {
+  const [err, setErr] = useState(false);
+  if (err) return <>{label}</>;
+  return (
+    <img
+      src={url}
+      alt=""
+      loading="lazy"
+      onError={() => setErr(true)}
+      style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }}
+    />
   );
 }
 
 // ---------- Аватар игрока ----------
 export function PlayerAvatar({ nick, size = 34 }) {
   return (
-    <span className="player-avatar" style={{ width: size, height: size, background: strColor(nick), fontSize: Math.max(9, Math.round(size * 0.36)) }}>
-      {initialsOf(nick)}
+    <span className="player-avatar" style={{ width: size, height: size, background: strColor(nick || "?"), fontSize: Math.max(9, Math.round(size * 0.36)) }}>
+      {initialsOf(nick || "?")}
     </span>
   );
 }
@@ -84,6 +102,7 @@ export function AttrBadge({ attr, tooltip }) {
 
 // ---------- Полоска винрейта ----------
 export function WinRateBar({ wr }) {
+  if (wr == null) return null;
   const color = wrColor(wr);
   return (
     <span className="wr-bar">
