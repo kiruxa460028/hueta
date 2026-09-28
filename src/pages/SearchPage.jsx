@@ -1,22 +1,26 @@
 import React, { useMemo } from "react";
-import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { searchAll } from "../data/db.js";
-import { teamById } from "../data/db.js";
+import { liveSearch } from "../data/live.js";
+import { useDataSource } from "../context.jsx";
 import { HeroIcon, PlayerAvatar, TeamLogo, RankBadge, Empty } from "../components/common.jsx";
-import { flag, wrColor } from "../lib/format.js";
+import { flag } from "../lib/format.js";
 
 export default function SearchPage() {
   const [params] = useSearchParams();
   const q = params.get("q") || "";
   const bracket = params.get("bracket") || "pro";
-  const res = useMemo(() => searchAll(q), [q]);
+  const { mode } = useDataSource();
+  const res = useMemo(() => (mode === "live" ? liveSearch(q) : searchAll(q)), [q, mode]);
 
   return (
     <div className="page">
       <div className="bracket-row">
         <div>
           <h1 className="page-title">Поиск</h1>
-          <p className="page-subtitle">Результаты по запросу «{q}»</p>
+          <p className="page-subtitle">
+            Результаты по запросу «{q}» · {mode === "live" ? "живые данные OpenDota" : "демо-режим"}
+          </p>
         </div>
       </div>
 
@@ -43,10 +47,16 @@ export default function SearchPage() {
           <div className="card__head"><span className="card__title">Игроки</span></div>
           <div className="card__body card__body--flush" style={{ padding: 8 }}>
             {res.players.map((p) => (
-              <Link key={p.id} to={`/players/${p.id}?bracket=${bracket}`} className="matchup-row">
+              <Link key={p.id} to={`/players/${p.id}${String(p.id).startsWith("a") ? "" : `?bracket=${bracket}`}`} className="matchup-row">
                 <PlayerAvatar nick={p.nick} size={30} />
                 <span style={{ fontWeight: 700 }}>{p.nick} <span style={{ fontSize: 12 }}>{flag(p.country)}</span></span>
-                {p.pro ? <span className="rank-badge rank-pro">PRO</span> : <RankBadge bracket={p.bracket || bracket} />}
+                {p.teamName ? (
+                  <span className="muted" style={{ fontSize: 12 }}>· {p.teamName}</span>
+                ) : p.pro ? (
+                  <span className="rank-badge rank-pro">PRO</span>
+                ) : (
+                  <RankBadge bracket={p.bracket || bracket} />
+                )}
               </Link>
             ))}
           </div>

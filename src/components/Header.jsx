@@ -1,9 +1,41 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { searchAll } from "../data/db.js";
-import { useBracket } from "../context.jsx";
+import { liveSearch } from "../data/live.js";
+import { useBracket, useDataSource } from "../context.jsx";
 import { HeroIcon, TeamLogo, PlayerAvatar, RankBadge } from "./common.jsx";
 import { flag } from "../lib/format.js";
+
+function SourceBadge() {
+  const { mode, refresh } = useDataSource();
+  const [busy, setBusy] = useState(false);
+  const map = {
+    live: { cls: "src-live", dot: "#3ddc84", text: "OpenDota · актуальные данные" },
+    demo: { cls: "src-demo", dot: "#f0b90b", text: "Демо-данные (API недоступен)" },
+    loading: { cls: "src-loading", dot: "#8b95a8", text: "Подключение к OpenDota…" },
+  };
+  const s = map[mode] || map.loading;
+  return (
+    <button
+      className={`src-badge ${s.cls}`}
+      data-tip={
+        mode === "live"
+          ? "Данные: api.opendota.com · нажмите для обновления"
+          : mode === "demo"
+            ? "Не удалось получить данные OpenDota · нажмите для повтора"
+            : "Загружаем актуальные данные…"
+      }
+      onClick={() => {
+        setBusy(true);
+        refresh();
+        setTimeout(() => setBusy(false), 1500);
+      }}
+    >
+      <span className="src-dot" style={{ background: s.dot }} />
+      {busy ? "Обновление…" : s.text}
+    </button>
+  );
+}
 
 function Logo() {
   return (
@@ -31,8 +63,9 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const { bracket } = useBracket();
+  const { mode } = useDataSource();
 
-  const results = open && q.trim().length >= 1 ? searchAll(q) : null;
+  const results = open && q.trim().length >= 1 ? (mode === "live" ? liveSearch(q) : searchAll(q)) : null;
   const flat = results
     ? [...results.heroes.map((h) => ({ type: "hero", obj: h })), ...results.players.map((p) => ({ type: "player", obj: p })), ...results.teams.map((t) => ({ type: "team", obj: t }))]
     : [];
@@ -123,7 +156,9 @@ export default function Header() {
                         onMouseEnter={() => setHi(myIdx)} onClick={() => go(flat[myIdx])}>
                         <PlayerAvatar nick={p.nick} size={26} />
                         <span style={{ fontWeight: 600 }}>{p.nick}</span>
-                        <span className="muted" style={{ fontSize: 12 }}>{flag(p.country)} {p.pro ? `· ${p.teamId ? "про" : ""}` : ""}</span>
+                        <span className="muted" style={{ fontSize: 12 }}>
+                          {flag(p.country)} {p.teamName ? `· ${p.teamName}` : p.pro ? "· про" : ""}
+                        </span>
                       </div>
                     );
                   })}
@@ -148,6 +183,7 @@ export default function Header() {
             </div>
           )}
         </div>
+        <SourceBadge />
         <nav className="nav">
           <Link to={`/matches?bracket=${bracket}`} className={location.pathname.startsWith("/matches") ? "active" : ""}>Матчи</Link>
           <Link to={`/heroes?bracket=${bracket}`} className={location.pathname.startsWith("/heroes") ? "active" : ""}>Герои</Link>

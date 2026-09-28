@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { BRACKETS } from "./data/db.js";
+import { live } from "./data/live.js";
 
 const BracketCtx = createContext({ bracket: "pro", setBracket: () => {} });
+const DataCtx = createContext({ mode: "loading", refresh: () => {} });
 
 export function BracketProvider({ children }) {
   const [bracket, setBracketState] = useState(() => {
@@ -16,7 +18,6 @@ export function BracketProvider({ children }) {
     window.history.replaceState({}, "", url);
   };
 
-  // синхронизация при навигации назад/вперёд
   useEffect(() => {
     const onPop = () => {
       const q = new URLSearchParams(window.location.search).get("bracket");
@@ -30,6 +31,24 @@ export function BracketProvider({ children }) {
 }
 
 export const useBracket = () => useContext(BracketCtx);
+
+// Источник данных: 'loading' → 'live' (OpenDota) | 'demo' (офлайн-генератор)
+export function DataSourceProvider({ children }) {
+  const [mode, setMode] = useState("loading");
+
+  useEffect(() => {
+    const apply = () => setMode(live.status === "ok" ? "live" : live.status === "loading" || live.status === "idle" ? "loading" : "demo");
+    const unsub = live.subscribe(apply);
+    live.init();
+    apply();
+    return unsub;
+  }, []);
+
+  const refresh = () => live.init(true);
+  return <DataCtx.Provider value={{ mode, refresh }}>{children}</DataCtx.Provider>;
+}
+
+export const useDataSource = () => useContext(DataCtx);
 
 export function BracketTabs({ extra }) {
   const { bracket, setBracket } = useBracket();

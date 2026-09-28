@@ -1,20 +1,26 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { getTeamsList } from "../data/db.js";
+import { useDataSource } from "../context.jsx";
+import { useTeamsList } from "../data/hooks.js";
 import { REGION_RU } from "../data/scene.js";
 import { TeamLogo } from "../components/common.jsx";
 import { wrColor } from "../lib/format.js";
 
 export default function TeamsPage() {
-  const teams = useMemo(() => getTeamsList(), []);
+  const teams = useTeamsList();
+  const { mode } = useDataSource();
+  const isLive = mode === "live";
 
   return (
     <div className="page">
       <div className="bracket-row">
         <div>
           <h1 className="page-title">Команды</h1>
-          <p className="page-subtitle">Профессиональные команды · рейтинг по результатам про-матчей</p>
+          <p className="page-subtitle">
+            {isLive ? "Рейтинг активных команд · живые данные OpenDota (Elo, победы/поражения за всё время)" : "Профессиональные команды · демо-режим"}
+          </p>
         </div>
+        {isLive ? <span className="real-chip">OpenDota</span> : <span className="demo-chip">демо</span>}
       </div>
 
       <div className="card">
@@ -47,7 +53,7 @@ export default function TeamsPage() {
                       </span>
                     </Link>
                   </td>
-                  <td className="muted">{REGION_RU[t.team.region]}</td>
+                  <td className="muted">{t.team.region ? REGION_RU[t.team.region] : "—"}</td>
                   <td className="num">{t.matches}</td>
                   <td className="num" style={{ color: "var(--radiant)" }}>{t.wins}</td>
                   <td className="num" style={{ color: "var(--dire)" }}>{t.matches - t.wins}</td>

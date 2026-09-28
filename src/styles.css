@@ -55,6 +55,40 @@ button { font-family: inherit; }
 }
 .header__inner { display: flex; align-items: center; gap: 22px; height: 60px; }
 
+/* Индикатор источника данных */
+.src-badge {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 999px;
+  color: var(--muted); font-size: 11.5px; font-weight: 700; padding: 5px 12px; cursor: pointer;
+  transition: all 0.12s; white-space: nowrap;
+}
+.src-badge:hover { color: var(--text); border-color: #38425a; }
+.src-badge.src-live { color: #7ee0a3; border-color: rgba(61, 220, 132, 0.35); }
+.src-badge.src-demo { color: #f0b90b; border-color: rgba(240, 185, 11, 0.35); }
+.src-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.src-badge.src-live .src-dot { animation: pulse-green 2s infinite; }
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.5); }
+  70% { box-shadow: 0 0 0 6px rgba(61, 220, 132, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0); }
+}
+
+/* Пометки источников данных на странице */
+.demo-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(240, 185, 11, 0.1); color: #f0b90b;
+  border: 1px solid rgba(240, 185, 11, 0.3);
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.6px;
+  padding: 2px 8px; border-radius: 5px; text-transform: uppercase;
+}
+.real-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(61, 220, 132, 0.1); color: #3ddc84;
+  border: 1px solid rgba(61, 220, 132, 0.3);
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.6px;
+  padding: 2px 8px; border-radius: 5px; text-transform: uppercase;
+}
+
 .logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .logo:hover { color: var(--text); }
 .logo__mark { width: 34px; height: 34px; }

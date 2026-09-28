@@ -1,6 +1,6 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { BracketProvider } from "./context.jsx";
+import { BracketProvider, DataSourceProvider } from "./context.jsx";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
 import HomePage from "./pages/HomePage.jsx";
@@ -16,24 +16,26 @@ import SearchPage from "./pages/SearchPage.jsx";
 
 export default function App() {
   return (
-    <BracketProvider>
-      <Header />
-      <div className="container">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/heroes" element={<HeroesPage />} />
-          <Route path="/heroes/:slug" element={<HeroDetailPage />} />
-          <Route path="/players" element={<PlayersPage />} />
-          <Route path="/players/:id" element={<PlayerDetailPage />} />
-          <Route path="/teams" element={<TeamsPage />} />
-          <Route path="/teams/:id" element={<TeamDetailPage />} />
-          <Route path="/matches" element={<MatchesPage />} />
-          <Route path="/matches/:id" element={<MatchDetailPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-      <Footer />
-    </BracketProvider>
+    <DataSourceProvider>
+      <BracketProvider>
+        <Header />
+        <div className="container">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/heroes" element={<HeroesPage />} />
+            <Route path="/heroes/:slug" element={<HeroDetailPage />} />
+            <Route path="/players" element={<PlayersPage />} />
+            <Route path="/players/:id" element={<PlayerDetailPage />} />
+            <Route path="/teams" element={<TeamsPage />} />
+            <Route path="/teams/:id" element={<TeamDetailPage />} />
+            <Route path="/matches" element={<MatchesPage />} />
+            <Route path="/matches/:id" element={<MatchDetailPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+        <Footer />
+      </BracketProvider>
+    </DataSourceProvider>
   );
 }

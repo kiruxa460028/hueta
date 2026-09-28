@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getHeroMeta, getTierList, BRACKET_INFO } from "../data/db.js";
+import { BRACKET_INFO } from "../data/db.js";
 import { ROLE_RU, ATTR_RU } from "../data/heroes.js";
-import { useBracket, BracketTabs } from "../context.jsx";
+import { useBracket, useDataSource, BracketTabs } from "../context.jsx";
+import { useHeroMeta, useTierList } from "../data/hooks.js";
 import HeroMetaTable from "../components/HeroMetaTable.jsx";
 import { HeroIcon, TierBadge } from "../components/common.jsx";
 import { wrColor } from "../lib/format.js";
@@ -19,8 +20,9 @@ const ROLES = ["Carry", "Support", "Nuker", "Disabler", "Initiator", "Durable", 
 
 export default function HeroesPage() {
   const { bracket } = useBracket();
-  const meta = useMemo(() => getHeroMeta(bracket), [bracket]);
-  const tiers = useMemo(() => getTierList(bracket), [bracket]);
+  const { mode } = useDataSource();
+  const meta = useHeroMeta(bracket);
+  const tiers = useTierList(bracket);
   const [attr, setAttr] = useState("all");
   const [role, setRole] = useState(null);
   const [q, setQ] = useState("");

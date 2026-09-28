@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import { heroIconUrl, ATTR_SHORT_RU } from "../data/heroes.js";
 import { itemUrl, itemByKey } from "../data/items.js";
+import { ITEM_BY_ID } from "../data/constants.js";
 import { strColor, initialsOf, wrColor } from "../lib/format.js";
+
+// Название предмета по ключу: свой каталог → карта dotaconstants → ключ
+const KEY_TO_ITEM = Object.values(ITEM_BY_ID).reduce((acc, it) => {
+  acc[it.key] = it;
+  return acc;
+}, {});
+export const itemNameByKey = (key) => itemByKey.get(key)?.name || KEY_TO_ITEM[key]?.name || key;
 
 // ---------- Иконка героя с фолбэком ----------
 // Используются вертикальные иконки из CDN Steam (как в клиенте игры)
@@ -50,17 +58,16 @@ export function PlayerAvatar({ nick, size = 34 }) {
 
 // ---------- Иконка предмета с тултипом ----------
 export function ItemIcon({ itemKey, neutral, empty }) {
-  const item = itemByKey.get(itemKey);
   const [err, setErr] = useState(false);
-  if (!itemKey || empty || !item) {
+  if (!itemKey || empty) {
     return <span className="item-icon item-icon--empty" />;
   }
   return (
-    <span className={`item-icon ${neutral ? "item-icon--neutral" : ""}`} data-tip={item.name}>
+    <span className={`item-icon ${neutral ? "item-icon--neutral" : ""}`} data-tip={itemNameByKey(itemKey)}>
       {err ? (
-        <span style={{ fontSize: 7.5, color: "#8b95a8", fontWeight: 700 }}>{item.name.slice(0, 3).toUpperCase()}</span>
+        <span style={{ fontSize: 7.5, color: "#8b95a8", fontWeight: 700 }}>{itemNameByKey(itemKey).slice(0, 3).toUpperCase()}</span>
       ) : (
-        <img src={itemUrl(itemKey)} alt={item.name} loading="lazy" onError={() => setErr(true)} />
+        <img src={itemUrl(itemKey)} alt="" loading="lazy" onError={() => setErr(true)} />
       )}
     </span>
   );

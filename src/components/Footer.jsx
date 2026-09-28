@@ -21,8 +21,10 @@ export default function Footer() {
           <Link to="/teams">Команды</Link>
         </div>
         <div style={{ maxWidth: 300 }}>
-          Не аффилировано с Valve Corporation. Dota 2 — товарный знак Valve.
-          Изображения героев и предметов: © Valve Corporation через Steam CDN.
+          Данные: <a href="https://www.opendota.com" target="_blank" rel="noreferrer">OpenDota API</a> (мета, матчи,
+          команды, профили) загружаются в браузере и всегда актуальны; если API недоступен, работает
+          офлайн-демо-режим с локальным генератором. Не аффилировано с Valve Corporation.
+          Dota 2 — товарный знак Valve. Изображения: © Valve Corporation через Steam CDN.
         </div>
       </div>
     </footer>

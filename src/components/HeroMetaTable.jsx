@@ -37,7 +37,9 @@ export default function HeroMetaTable({ data, compact = false, limit, initialSor
     else setSort({ key, dir: key === "hero" ? "asc" : "desc" });
   };
 
-  const cols = COLS.filter((c) => !compact || COMPACT_COLS.has(c.key));
+  const cols = COLS.filter((c) => (!compact || COMPACT_COLS.has(c.key)) && (!c.opt || data.some((r) => r[c.key] != null)));
+
+  const fmtInt = (v) => (v == null ? "—" : Math.round(v));
 
   return (
     <div className="wide-table-wrap">
